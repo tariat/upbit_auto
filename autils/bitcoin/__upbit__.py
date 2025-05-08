@@ -82,10 +82,10 @@ class UpBit():
         
         df = df.sort_values("candle_date_time_kst", ascending=True).reset_index(drop=True)        
 
-        # 5선 이평선
-        df['ma5'] = df['trade_price'].rolling(window=5).mean()
-        df['ma10'] = df['trade_price'].rolling(window=10).mean()
-        df['ma20'] = df['trade_price'].rolling(window=20).mean()
+        # # 5선 이평선
+        # df['ma5'] = df['trade_price'].rolling(window=5).mean()
+        # df['ma10'] = df['trade_price'].rolling(window=10).mean()
+        # df['ma20'] = df['trade_price'].rolling(window=20).mean()
 
         return df
 

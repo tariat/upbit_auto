@@ -1,3 +1,4 @@
+import os
 UPBIT_ACCESS_KEY = os.getenv("UPBIT_ACCESS_KEY")
 UPBIT_ACCESS_KEY = os.getenv("UPBIT_SECRET_KEY")
 

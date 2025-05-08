@@ -18,19 +18,12 @@ from typing import Optional, Tuple
 import traceback
 import time
 from autils.bitcoin.upbit import api
-from autils.messenser.telegram import send_message_default
+# from autils.messenser.telegram import send_message_default
 
-if os.getcwd().find("Library")>-1:
-    import sys
-    sys.path.append('/Users/kimjinhyung/PycharmProjects/FlaskStock')
-    IS_LOCAL_RUN  = True
-else:
-    IS_LOCAL_RUN  = False
-    import sys
-    sys.path.append('/home/tariat/FlaskStock')
+def load_price(mkt, count=200):
+    
 
-from autils.db.mysql_utils import MySQL
-ms = MySQL()
+
 
 class MomentumTrader:
     def __init__(self, market: str, mode: str = 'observe', investment_amount: float = 6000, minutes_lag=5):
