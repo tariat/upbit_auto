@@ -64,6 +64,13 @@ def load_price(market, mode, minutes_lag, count=200, is_load_db=False):
     return data.set_index('Date')        
 
 
+def EMA(series: pd.Series, period: int) -> pd.Series:
+    """
+    Calculates the Exponential Moving Average.
+    """
+    return series.ewm(span=period, adjust=False).mean()
+
+
 class SmaRsi(Strategy):
     def init(self):
         self.level = 30
@@ -80,13 +87,47 @@ class SmaRsi(Strategy):
         elif price < .98 * self.ma10[-1]:
             self.position.close()
 
+
+class EnhancedMomentum(Strategy):
+    def init(self):
+        self.ma10 = self.I(SMA, self.data.Close, 10)
+        self.ma50 = self.I(SMA, self.data.Close, 50)
+        self.rsi = self.I(RSI, self.data.Close, 14)
+        
+        # MACD calculations
+        ema12 = self.I(EMA, self.data.Close.s, 12, name="EMA12")
+        ema26 = self.I(EMA, self.data.Close.s, 26, name="EMA26")
+        
+        macd_line_data = ema12 - ema26
+        self.macd_line = self.I(lambda: macd_line_data, name="MACD_line")
+        
+        # Ensure macd_line_data is treated as a Series for EMA function
+        # The self.I wrapper for signal_line will make it available in the same way as other indicators
+        signal_line_data = EMA(pd.Series(macd_line_data), 9)
+        self.signal_line = self.I(lambda: signal_line_data, name="Signal_line")
+
+    def next(self):
+        # Entry Condition:
+        if (not self.position and
+            self.ma10[-1] > self.ma50[-1] and
+            crossover(self.macd_line, self.signal_line) and  # Use self.macd_line and self.signal_line directly
+            self.rsi[-1] > 50):
+            price = self.data.Close[-1]
+            self.buy(sl=0.95 * price)
+
+        # Exit Condition:
+        elif self.position: # Only check exit conditions if a position exists
+            if crossover(self.ma50, self.ma10) or \
+               crossover(self.signal_line, self.macd_line):
+                self.position.close()
+
 if __name__=="__main__":
     scr = scr()
     # coin_list, coin_info = scr.get_basic_info()
 
     data = load_price('KRW-BTC', "backtest", 3, count=200, is_load_db=True)
 
-    bt = Backtest(data, SmaRsi, commission=.002, cash=100000000, exclusive_orders=True)
+    bt = Backtest(data, EnhancedMomentum, commission=.002, cash=100000000, exclusive_orders=True)
     res = bt.run()
     bt.plot()
     print(res)
